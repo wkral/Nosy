@@ -1,32 +1,78 @@
 # By Jeff Winkler, http://jeffwinkler.net
+# Enhanced by William Kral
 
-import os,stat,time,sys,fnmatch
+import os
+import stat
+import time
+import sys
+import fnmatch
+import json
+
+''' Nosy will watch your data source directory for source files and execute
+    a command of your choosing when ever a watched source file changes
 
 
-EXTENSIONS = ['*.py']
-EXECUTABLE = 'nosetests'
+    Config file:
+        `pwd`/.nosy
+        ~/.nosy
 
+    JSON Config example:
+        { "exec": "nosetests",
+          "watch": ["*.py", "*.html", "*.js"] }
 '''
-Watch for changes in all file types specified in 'EXTENSIONS'. 
-If changes, run test executable in 'EXECUTABLE'. 
-'''
-def checkSum():
-    ''' Return a long which can be used to know if any .py files have changed.'''
+
+
+def load_config_file(config_path):
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                return json.load(f)
+    except:
+        sys.stderr.write("Error parsing json config files.\n")
+        sys.exit(1)
+
+    return {}
+
+
+def load_config():
+    ''' Load the configuration data based on the current working directory or
+        the home folders default configurations '''
+
+    config = {'exec': 'nosetests', 'watch': ['*.py']}
+
+    config.update(load_config_file(os.path.expanduser("~/.nosy")))
+    config.update(load_config_file('.nosy'))
+
+    return config
+
+
+def check_sum(config):
+    ''' Stat all files matching the patterns in config['watch'] '''
     val = 0
     for root, dirs, files in os.walk(os.getcwd()):
-	for extension in EXTENSIONS:
+        for extension in config['watch']:
             for f in fnmatch.filter(files, extension):
-                stats = os.stat (os.path.join(root, f))
-                val += stats [stat.ST_SIZE] + stats [stat.ST_MTIME]
+                stats = os.stat(os.path.join(root, f))
+                val += stats[stat.ST_SIZE] + stats[stat.ST_MTIME]
     return val
 
-val=0
-try:
-    while (True):
-        if checkSum() != val:
-            val=checkSum()
-            os.system ('%s %s' % (EXECUTABLE, ' '.join(sys.argv[1:])))
-        time.sleep(1)
-except KeyboardInterrupt:
-    print 'Goodbye'
 
+def main():
+    ''' Continuously run check_sum on path expressions in the config
+        If there is a change in any of those files execute the test runner'''
+    config = load_config()
+    print(config)
+    last_sum = 0
+    try:
+        while (True):
+            new_sum = check_sum(config)
+            if new_sum != last_sum:
+                last_sum = new_sum
+                args = ' '.join(sys.argv[1:])
+                os.system('{0} {1}'.format(config['exec'], args))
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print '\nGoodbye'
+
+if __name__ == '__main__':
+    main()
