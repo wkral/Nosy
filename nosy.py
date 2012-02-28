@@ -70,14 +70,16 @@ def main():
     ''' Continuously run check_sum on path expressions in the config
         If there is a change in any of those files execute the test runner'''
     config = load_config()
+
+    args = ' '.join(sys.argv[1:])
+    command = '{0} {1}'.format(config['exec'], args)
+
     last_sum = 0
     try:
         while (True):
             new_sum = check_sum(config)
             if new_sum != last_sum:
                 last_sum = new_sum
-                args = ' '.join(sys.argv[1:])
-                command = '{0} {1}'.format(config['exec'], args)
                 subprocess.call(command, shell=True)
             time.sleep(1)
     except KeyboardInterrupt:
