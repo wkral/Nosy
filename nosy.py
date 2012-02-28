@@ -1,12 +1,13 @@
 # By Jeff Winkler, http://jeffwinkler.net
 # Enhanced by William Kral
 
-import os
-import stat
-import time
-import sys
 import fnmatch
 import json
+import os
+import stat
+import subprocess
+import sys
+import time
 
 '''
 Nosy
@@ -76,7 +77,8 @@ def main():
             if new_sum != last_sum:
                 last_sum = new_sum
                 args = ' '.join(sys.argv[1:])
-                os.system('{0} {1}'.format(config['exec'], args))
+                command = '{0} {1}'.format(config['exec'], args)
+                subprocess.call(command, shell=True)
             time.sleep(1)
     except KeyboardInterrupt:
         print '\nGoodbye'
