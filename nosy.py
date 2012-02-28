@@ -61,7 +61,6 @@ def main():
     ''' Continuously run check_sum on path expressions in the config
         If there is a change in any of those files execute the test runner'''
     config = load_config()
-    print(config)
     last_sum = 0
     try:
         while (True):
