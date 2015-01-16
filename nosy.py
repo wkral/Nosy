@@ -83,7 +83,7 @@ def main():
                 subprocess.call(command, shell=True)
             time.sleep(1)
     except KeyboardInterrupt:
-        print '\nGoodbye'
+        print('\nGoodbye')
 
 if __name__ == '__main__':
     main()
